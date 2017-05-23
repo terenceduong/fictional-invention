@@ -1,0 +1,1 @@
+I assume that "Compress" means just using zip compression. i.e. using -c flag will result in a .zip file.
