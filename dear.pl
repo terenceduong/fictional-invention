@@ -2,6 +2,9 @@
 
 use File::Copy::Recursive qw(fcopy rcopy dircopy fmove rmove dirmove);
 use File::Path qw(remove_tree);
+use IO::Compress::Bzip2 qw(bzip2 $Bzip2Error);
+use IO::Compress::Gzip qw(gzip $GzipError);
+use IO::Compress::Zip qw(zip $ZipError);
 use File::Basename;
 use Archive::Tar;
 use strict;
@@ -115,12 +118,17 @@ if (dirname($outfile) eq dirname($indir . "/something")) {
 			if (lc $ARGV[0] eq "-g") {
 				# compress with gzip
 				say "*Compress with gzip";
+				gzip $outfile => ($outfile . ".gz") or die "gzip failed: $GzipError\n";
 			} elsif (lc $ARGV[0] eq "-b") {
 				# compress with bzip2
 				say "*Compress with bzip2";
-			} elsif (lc $ARGV[0] eq "-z") {
+				bzip2 $outfile => ($outfile . ".bz2") or die "bzip2 failed: $Bzip2Error\n";
+			} elsif (lc $ARGV[0] eq "-c") {
 				# compress (WITH ZIP refer to readme.txt)
-				say "*Compress with zip";
+				say "*Compress with compress";
+				system("compress $outfile");
+			} else {
+				# don't need to do anything, leave as tar file
 			}
 
 

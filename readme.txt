@@ -1,1 +1,3 @@
-I assume that "Compress" means just using zip compression. i.e. using -c flag will result in a .zip file.
+Assume that Compress uses the compress command from the terminal.
+	As a result, this requires the installation of ncompress.
+
