@@ -16,8 +16,6 @@ use Digest::MD5;
 
 use feature 'say';
 
-use feature "switch";
-
 
 my $num_args = scalar @ARGV;
 
@@ -25,7 +23,7 @@ my $indir;
 my $outfile;
 my $flag;
 my $option = "";
-my $duplicatesList = "duplicatesList.txt";
+my $duplicates_list = "duplicates_list.txt";
 
 if ($num_args == 2) {
 	# no options have been specified
@@ -45,7 +43,7 @@ my $folder_name = basename($indir);
 my $new = "Tempdir/" . $folder_name;
 
 if (dirname($outfile) eq dirname($indir . "/something")) {
-	say "oh no same location";
+	say "oh no indir and outfile are in the same directory!! pls don't do this";
 } else {
 	if (-d $indir) {
 		if (-d dirname($outfile)) {
@@ -56,7 +54,7 @@ if (dirname($outfile) eq dirname($indir . "/something")) {
 			my $wasted = 0;
 			find(\&check_file, $indir || ".");
 
-			open(my $fh, '>', $duplicatesList); 
+			open(my $fh, '>', $duplicates_list); 
 
 			local $" = ", ";
 			say "Remove all duplicates? (y/n)";
@@ -107,8 +105,8 @@ if (dirname($outfile) eq dirname($indir . "/something")) {
 			close $fh;
 			remove_tree("Tempdir");
 
-			$tar->add_files($duplicatesList);
-			unlink $duplicatesList;
+			$tar->add_files($duplicates_list);
+			unlink $duplicates_list;
 			$outfile = join "", $outfile, ".tar";
 			$tar->write($outfile);
 
@@ -117,15 +115,15 @@ if (dirname($outfile) eq dirname($indir . "/something")) {
 
 			if (lc $ARGV[0] eq "-g") {
 				# compress with gzip
-				say "*Compress with gzip";
+				say "* Compress with gzip";
 				gzip $outfile => ($outfile . ".gz") or die "gzip failed: $GzipError\n";
 			} elsif (lc $ARGV[0] eq "-b") {
 				# compress with bzip2
-				say "*Compress with bzip2";
+				say "* Compress with bzip2";
 				bzip2 $outfile => ($outfile . ".bz2") or die "bzip2 failed: $Bzip2Error\n";
 			} elsif (lc $ARGV[0] eq "-c") {
 				# compress (WITH ZIP refer to readme.txt)
-				say "*Compress with compress";
+				say "* Compress with compress";
 				system("compress $outfile");
 			} else {
 				# don't need to do anything, leave as tar file
@@ -136,9 +134,9 @@ if (dirname($outfile) eq dirname($indir . "/something")) {
 			  -f && push @{$files{(stat(_))[7]}}, $File::Find::name;
 			}
 		} else {
-			say "outfile dir not found!!";
+			say "outfile directory not found!! pls check it exists";
 		}
 	} else {
-		say "indir not found!!";
+		say "indir not found!! pls check it exists";
 	}
 }
