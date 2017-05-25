@@ -52,15 +52,15 @@ if (dirname($outfile) eq dirname($indir . "/something")) {
 
 			my %files;
 			my $wasted = 0;
-			find(\&check_file, $indir || ".");
+			say (find(\&check_file, $indir || "."));
 
 			open(my $fh, '>', $duplicates_list); 
 
-			local $" = ", ";
 			say "Remove all duplicates? (y/n)";
 			my $removeDuplicates = <STDIN>;
 			chomp $removeDuplicates;
 
+			local $" = ", ";
 			# Create new tar object
 			my $tar = Archive::Tar->new();
 
@@ -74,7 +74,6 @@ if (dirname($outfile) eq dirname($indir . "/something")) {
 					    open(FILE, $file) or next;
 					    binmode(FILE);
 					    push @{$md5{Digest::MD5->new->addfile(*FILE)->hexdigest}},$file;
-					    # print "\n\n-----KENFILE---\n\n $file \n\n";
 
 					    if (lc $removeDuplicates eq "y" && $first == 0) {
 					    	# unlink($file);
@@ -124,7 +123,7 @@ if (dirname($outfile) eq dirname($indir . "/something")) {
 			} elsif (lc $ARGV[0] eq "-c") {
 				# compress (WITH ZIP refer to readme.txt)
 				say "* Compress with compress";
-				system("compress $outfile");
+				system("compress -f $outfile");
 			} else {
 				# don't need to do anything, leave as tar file
 			}
