@@ -76,16 +76,32 @@ if ($num_args == 3) {
 				say "* Create soft links";
 
 				open (MYFILE, $output_folder . "/duplicates_list.txt");
-				my $source_file;
-				my $dest_file;
+				my $target_file;
+				my $link_file;
 
 				while (<MYFILE>) {
 					chomp;
-					($source_file, $dest_file) = split(' ');
-					$source_file = basename($source_file);
-					my $output_dest = "$output_folder/$dest_file";
-					unless (-d $output_dest) {mkdir dirname($output_dest);}
-					system("ln -s -v $source_file $output_dest");
+					($target_file, $link_file) = split(' ');
+					# $target_file = basename($target_file);
+					# say "target_file: $target_file";
+					my $target_file_destination = "$output_folder/$target_file";
+					# say "target_file_destination: $target_file_destination";
+					my $link_file_destination = "$output_folder/$link_file";
+					# say "link_file_destination: $link_file_destination";
+					my $link_dest = dirname $link_file_destination;
+					# say "link_dest: $link_dest";
+					my $target_dest = dirname $target_file_destination;
+					# say "target_dest: $target_dest";
+					my $relative_path = `realpath --relative-to=./$link_dest ./$target_dest`;
+					chomp $relative_path;
+					# say "relative_path: $relative_path\n";
+					unless (-d $link_dest) {mkdir dirname($link_dest);}
+					
+					$target_file = basename $target_file;
+					# say ("target_file: $target_file");
+					# say "output_folder: $output_folder";
+					unless (-d dirname($link_file_destination)) {mkdir dirname($link_file_destination);}
+					system("ln -s -v $relative_path/$target_file $link_file_destination");
 				}
 
 				unlink($output_folder . "/duplicates_list.txt");
@@ -103,7 +119,7 @@ if ($num_args == 3) {
 					chomp;
 					($source_file, $dest_file) = split(' ');
 					my $output_dest = "$output_folder/$dest_file";
-					unless (-d $output_dest) {mkdir dirname($output_dest);}
+					unless (-d dirname $output_dest) {mkdir dirname($output_dest);}
 					system("cp -v $output_folder/$source_file $output_dest");
 				}
 
