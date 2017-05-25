@@ -1,2 +1,0 @@
-Data/testing2.txt Data/testing.txt
-Data/testing2.txt Data/testing3.txt
