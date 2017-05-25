@@ -47,11 +47,15 @@ if ($num_args == 3) {
 			elsif ($ext eq '.tar.gz') {
 				# gz file
 				say "$file_name is a tar.gz file";
+				system("tar -xzf $file_name -C $output_folder");
 			}
 			elsif ($ext eq '.tar.Z') {
 				# Z / compress file
 				say "$file_name is a tar.Z compress file";
 				system("uncompress $file_name");
+				chop($file_name);
+				chop($file_name);
+				system("tar -xf $file_name -C $output_folder");
 			}
 			elsif ($ext eq '.tar') {
 				# just tar file
@@ -67,6 +71,7 @@ if ($num_args == 3) {
 			if ($options eq "-d") {
 				# delete duplicate files, i.e. delete the duplicates list and extract everything
 				say "* Delete duplicate files";
+				unlink($output_folder . "/duplicates_list.txt");
 			} elsif ($options eq "-l") {
 				# unarchive duplicate files as soft links to the original (use ln -s)
 				say "* Create soft links"
@@ -74,6 +79,21 @@ if ($num_args == 3) {
 				# unarchive duplicate files as copies of the original i.e. copy original file 
 				# all occurrences of duplicates (same as before you archived everything)
 				say "* Restore all copies";
+
+				open (MYFILE, $output_folder . "/duplicates_list.txt");
+				my $source_file;
+				my $dest_file;
+
+				while (<MYFILE>) {
+					chomp;
+					($source_file, $dest_file) = split(' ');
+
+					say "source: $source_file, destination: $dest_file";
+					system("cp $output_folder/$source_file $output_folder/$dest_file");
+
+				}
+
+				# unlink($output_folder . "/duplicates_list.txt");
 			} else {
 				flag_usage();
 			}
