@@ -19,6 +19,7 @@ my $options;
 my $file_name;
 my $output_folder;
 
+# make sure there are 3 arguments
 if ($num_args == 3) {
 	($options, $file_name, $output_folder) = @ARGV;
 	my $firstchar = substr($output_folder, 0, 1);
@@ -37,6 +38,7 @@ if ($num_args == 3) {
 			# determine file type
 			my ($name, $dir, $ext) = fileparse($file_name, @exts);
 
+			# based on file type unarchive with different methods
 			if ($ext eq '.tar.bz2') {
 				# bz2 file
 				say "$file_name is a tar.bz2 file";
@@ -75,12 +77,16 @@ if ($num_args == 3) {
 				# unarchive duplicate files as soft links to the original (use ln -s)
 				say "* Create soft links";
 
+				# open the list of duplicates
 				open (MYFILE, $output_folder . "/duplicates_list.txt");
 				my $target_file;
 				my $link_file;
 
 				while (<MYFILE>) {
 					chomp;
+
+					# crazy stuff to get the different types of file names
+					# basenames or full paths etc etc
 					($target_file, $link_file) = split(' ');
 					my $target_file_destination = "$output_folder/$target_file";
 					my $link_file_destination = "$output_folder/$link_file";
@@ -101,7 +107,7 @@ if ($num_args == 3) {
 					unless (-d dirname($link_file_destination)) {mkdir dirname($link_file_destination);}
 					system("ln -s -v $relative_path/$target_file $link_file_destination");
 				}
-
+				# delete the leftover duplicates list
 				unlink($output_folder . "/duplicates_list.txt");
 
 			} elsif ($options eq "-c") {
@@ -112,7 +118,7 @@ if ($num_args == 3) {
 				open (MYFILE, $output_folder . "/duplicates_list.txt");
 				my $source_file;
 				my $dest_file;
-
+				# copy everything into the directory specified in duplicates list file
 				while (<MYFILE>) {
 					chomp;
 					($source_file, $dest_file) = split(' ');
@@ -121,6 +127,7 @@ if ($num_args == 3) {
 					system("cp -v $output_folder/$source_file $output_dest");
 				}
 
+				# delete the leftover duplicates list
 				unlink($output_folder . "/duplicates_list.txt");
 			} else {
 				flag_usage();

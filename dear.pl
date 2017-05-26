@@ -50,52 +50,46 @@ if (dirname($outfile) eq dirname($indir . "/something")) {
 
 			my %files;
 			my $wasted = 0;
+			# get all files in the directory
 			say (find(\&check_file, $indir || "."));
 
+			# open the duplicates list file
 			open(my $fh, '>', $duplicates_list); 
-
-			say "Remove all duplicates? (y/n)";
-			my $removeDuplicates = <STDIN>;
-			chomp $removeDuplicates;
 
 			local $" = ", ";
 			# Create new tar object
 			my $tar = Archive::Tar->new();
-
-			# foreach my $name (sort {$a <=> $b} keys %files) {
-				# say "number of files " . scalar @{$files{$name}};
 		  	my $firstFile = "";
 		  	my $firstMD5 = -1;
+
+		  	# sort everything in basename order
 			foreach my $name (sort {basename ($a) cmp basename ($b)} keys %files) {
-				# say "number of files " . scalar @{$files{$name}};
 			  	my %md5;
-			  	foreach my $size (@{$files{$name}}) {
+			  	# get dat md5
+			  	foreach my $md5 (@{$files{$name}}) {
 			  		say "firstFile: $firstFile, firstMD5: $firstMD5";
 			  		my $basename = basename $name;
-					say "basename: $basename, size: $size";
+					say "basename: $basename, md5: $md5";
+					# check for name matches
 			    	if ($basename eq $firstFile) {
-			    		if ($size ne $firstMD5) {
+			    		# check to make sure md5 isn't matching (i.e. same name but diff md5)
+			    		if ($md5 ne $firstMD5) {
 							say "added $name";
 							$tar->add_files($name);
 							$firstFile = $basename;
-							$firstMD5 = $size;
-						} else {
+							$firstMD5 = $md5;
+						} else { # same name and same md5
 						    open(FILE, $name) or next;
 						    say "opened $name";
 						    binmode(FILE);
 						    push @{$md5{Digest::MD5->new->addfile(*FILE)->hexdigest}},$name;
-
-						    if (lc $removeDuplicates eq "y") {
-						    	# unlink($name);
-						        print "would have removed $name\n";
-						    }
 					        print $fh "$firstFile $name\n";	
 					    }
-					} else {
+					} else { # different name don't worry about md5
 						say "added $name";
 						$tar->add_files($name);
 						$firstFile = $basename;
-						$firstMD5 = $size;
+						$firstMD5 = $md5;
 					}
 			  	}
 			}
@@ -103,14 +97,14 @@ if (dirname($outfile) eq dirname($indir . "/something")) {
 			close $fh;
 			remove_tree("Tempdir");
 
+			# add files to tar
 			$tar->add_files($duplicates_list);
+			# delete the leftover duplicates file
 			unlink $duplicates_list;
 			$outfile = join "", $outfile, ".tar";
 			$tar->write($outfile);
 
-			say $outfile;
-
-
+			# compression options based on flag
 			if (lc $ARGV[0] eq "-g") {
 				# compress with gzip
 				say "* Compress with gzip";
@@ -128,6 +122,7 @@ if (dirname($outfile) eq dirname($indir . "/something")) {
 			}
 
 
+			# pushes files + their md5 into a hash
 			sub check_file {
 				my $filename = $_;
   				my $fullpath = $File::Find::name;	
