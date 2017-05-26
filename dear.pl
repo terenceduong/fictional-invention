@@ -35,8 +35,6 @@ if ($num_args == 2) {
 	say "option: $option, outfile: $outfile, indir: $indir";
 }
 
-
-
 chomp($indir);
 my $folder_name = basename($indir);
 # say "Folder name: $folder_name\n";
@@ -64,42 +62,43 @@ if (dirname($outfile) eq dirname($indir . "/something")) {
 			# Create new tar object
 			my $tar = Archive::Tar->new();
 
-			foreach my $size (sort {$b <=> $a} keys %files) {
-				say "number of files " . scalar @{$files{$size}};
+			# foreach my $name (sort {$a <=> $b} keys %files) {
+				# say "number of files " . scalar @{$files{$name}};
+		  	my $firstFile = "";
+		  	my $firstMD5 = -1;
+			foreach my $name (sort {basename ($a) cmp basename ($b)} keys %files) {
+				# say "number of files " . scalar @{$files{$name}};
 			  	my %md5;
-			  	my $first = 1;
-			  	my $firstFile;
-			  	foreach my $file (@{$files{$size}}) {
-				    if ($first != 1) {
-					    open(FILE, $file) or next;
-					    binmode(FILE);
-					    push @{$md5{Digest::MD5->new->addfile(*FILE)->hexdigest}},$file;
+			  	foreach my $size (@{$files{$name}}) {
+			  		say "firstFile: $firstFile, firstMD5: $firstMD5";
+			  		my $basename = basename $name;
+					say "basename: $basename, size: $size";
+			    	if ($basename eq $firstFile) {
+			    		if ($size ne $firstMD5) {
+							say "added $name";
+							$tar->add_files($name);
+							$firstFile = $basename;
+							$firstMD5 = $size;
+						} else {
+						    open(FILE, $name) or next;
+						    say "opened $name";
+						    binmode(FILE);
+						    push @{$md5{Digest::MD5->new->addfile(*FILE)->hexdigest}},$name;
 
-					    if (lc $removeDuplicates eq "y" && $first == 0) {
-					    	# unlink($file);
-					        print "would have removed $file\n";
+						    if (lc $removeDuplicates eq "y") {
+						    	# unlink($name);
+						        print "would have removed $name\n";
+						    }
+					        print $fh "$firstFile $name\n";	
 					    }
-				        print $fh "$firstFile $file\n";	
-
 					} else {
-						say "added $file";
-						$tar->add_files($file);
-						$firstFile = $file;
+						say "added $name";
+						$tar->add_files($name);
+						$firstFile = $basename;
+						$firstMD5 = $size;
 					}
-
-				$first = 0;
-			  	}	
-
-			  	foreach my $hash (keys %md5) {
-			    	next unless @{$md5{$hash}} > 1;
-			    	print "$size: @{$md5{$hash}}\n";
-			    	$wasted += $size * (@{$md5{$hash}} - 1);
 			  	}
 			}
-
-
-			1 while $wasted =~ s/^([-+]?\d+)(\d{3})/$1,$2/;
-			print "$wasted bytes in duplicated files\n";
 
 			close $fh;
 			remove_tree("Tempdir");
@@ -130,7 +129,15 @@ if (dirname($outfile) eq dirname($indir . "/something")) {
 
 
 			sub check_file {
-			  -f && push @{$files{(stat(_))[7]}}, $File::Find::name;
+				my $filename = $_;
+  				my $fullpath = $File::Find::name;	
+  				my $size = (stat($filename))[7];
+		  		if (-e $filename) { 
+		  			print "$filename exists!\n";
+					say "File name: $filename, size: $size"; 
+				}
+
+				push @{$files{$fullpath}}, Digest::MD5->new->add($size)->hexdigest;
 			}
 		} else {
 			say "outfile directory not found!! pls check it exists";

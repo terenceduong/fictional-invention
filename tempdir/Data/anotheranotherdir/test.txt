@@ -1,1 +1,0 @@
-../anotherdir/test.txt
